@@ -1,14 +1,16 @@
+CACHE_DURATION = 600
+
 import sys
 import json
 import requests
 import re
 from os import path
 
-# log.debug(path.abspath(path.join(__file__, "../..")))
+# Lets things work (mostly) smoothly when a yaml file invokes us from a separate scraper!
 sys.path.append(path.abspath(path.join(__file__, "../..")))
 sys.path.append(path.abspath(path.join(__file__, "../../../community")))
 
-from typing import TypedDict, Literal, TypeAlias
+from typing import Literal, TypeAlias
 from urllib.parse import urljoin, quote
 from py_common import log
 from py_common.util import scraper_args
@@ -16,10 +18,9 @@ from py_common.cache import cache_to_disk
 from py_common.types import ScrapedScene, ScrapedPerformer, ScrapedTag, SceneSearchResult
 from py_common.deps import ensure_requirements
 
-ensure_requirements("fp:free-proxy")
-from fp.fp import FreeProxy
-from Lib_Scrapifier.Scrapifier import parse_date, format_html
+from ScrapeBuddy.ScrapeBuddy import format_html, parse_date, get_proxies
 
+# NOTE: Surely there's a better way to do this?
 try:
     from Types import C4S_Json
     from Util import clean_url
@@ -33,11 +34,6 @@ SITE_ROOT = "https://www.clips4sale.com/"
 def from_root(link: str):
     return urljoin(SITE_ROOT, link)
 
-def get_proxies() -> dict:
-    proxy = FreeProxy(rand=True).get()
-    log.debug("proxy: %s" % proxy)
-    return { 'http': proxy } if proxy.startswith('http:') else { 'https': proxy }
-
 def handleArgReplacement(x: str, replacer: list[list[str]] | None = None):
     if(replacer):
         for v in replacer:
@@ -46,7 +42,7 @@ def handleArgReplacement(x: str, replacer: list[list[str]] | None = None):
 
 def removeCensored(match: re.Match):
     word = match.group(0)
-    # log.debug(word)
+    
     if(word in BANNED_WORDS):
         log.info(f'Removed banned word "{word}" from query!')
         return ""
@@ -63,7 +59,7 @@ def cleanQuery(query: str) -> str:
 
 def cleanTitle(clip: C4S_Json) -> str:
     title = clip["title"]
-    # log.debug(clip["format"])
+    
     if(not CONFIG_DICT.get("skip_default_title_replacer")):
         title = re.sub(r"<[^>]+>", "", clip["title"])
         # m(?:[ok4]v|p4)|(?:wm|fl)v|avi
@@ -73,8 +69,6 @@ def cleanTitle(clip: C4S_Json) -> str:
 
     title = handleArgReplacement(title, CONFIG_DICT.get("title_regex"))
     title = re.sub(r"[\[\(\{\<](?:\s|-)*[\]\)\}\>]", "", title)
-    # log.debug(title.strip(" -"))
-    # title = re.sub(re.compile())
 
     return title.strip(" -")
 
@@ -102,7 +96,7 @@ def make_search_link(query: str, studio_link: str | None, page: int = 1):
         return urljoin(urljoin(SITE_ROOT, studio_link), f"Cat0-AllCategories/Page{page}/C4SSort-recommended/Limit24/search/{query}")
     else:
         return f"{SITE_ROOT}clips/search/{query}/category/0/storesPage/1/clipsPage/{page}"
-    
+
 # def doRanking(query: str, clips: list[C4S_Json]):
 #     query = re.split(r"\W", query.lower())
 #     retVal: list[C4S_Json] = []
@@ -139,20 +133,20 @@ def paginateSearch(query: str, studio_link: str | None):
     if(CONFIG_DICT.get("multi_page")):
         page = 1
         while from_cache:
-            result = cache_to_disk(600)(do_cached_search)(query, studio_link, page)
+            result = cache_to_disk(CACHE_DURATION)(do_cached_search)(query, studio_link, page)
             page += 1
 
             if(result):
                 retVal += result
             else:
                 break
-        log.debug(f"Paginated search complete! Got {page - 1} pages containing {len(retVal)} results!   ")
+        log.debug(f"Paginated search complete! Got {page - 1} pages containing {len(retVal)} results!")
         return retVal
     else:
-        return cache_to_disk(600)(do_cached_search)(query, studio_link, 1)
+        return cache_to_disk(CACHE_DURATION)(do_cached_search)(query, studio_link, 1)
 
 
-def doSearch(query: str, studio_link: str | None = None) -> list[C4S_Json]:
+def doSearch(query: str) -> list[C4S_Json]:
     cleaned = cleanQuery(query)
 
     try:
@@ -164,7 +158,7 @@ def doSearch(query: str, studio_link: str | None = None) -> list[C4S_Json]:
             raise e
 
 def getClipFromURL(url: str) -> C4S_Json:
-    c = cache_to_disk(600)(doRequest)(url, {"_data": "routes/($lang).studio.$id_.$clipId.$clipSlug"}, True)
+    c = cache_to_disk(CACHE_DURATION)(doRequest)(url, {"_data": "routes/($lang).studio.$id_.$clipId.$clipSlug"}, True)
     return c["clip"]
 
 def populateScene(clip: C4S_Json, full_scene = True) -> ScrapedScene:
@@ -178,6 +172,9 @@ def populateScene(clip: C4S_Json, full_scene = True) -> ScrapedScene:
     except:
         log.warning("FYI this clip has no tags!")
 
+    # Clips4Sale clips actually *do* have a performer field, but usually only in search results
+    # Unfortunately, Stash doesn't pass the performers from the search results to the query fragment!
+    # So it's not really worth grabbing them unless that changes!
     # try:
     #     performers = list(map(lambda v: {
     #         "name": v["stage_name"],
@@ -190,8 +187,6 @@ def populateScene(clip: C4S_Json, full_scene = True) -> ScrapedScene:
             "name": v["name"],
             "disambiguation": clip["studioTitle"]
         }, tags))
-
-    # log.debug(clip)
 
     title = clip["title_clean"] if "title_clean" in clip else cleanTitle(clip)
     
@@ -206,7 +201,6 @@ def populateScene(clip: C4S_Json, full_scene = True) -> ScrapedScene:
     
     if(full_scene):
         desc = format_html(clip["description"])
-        # desc = format_html_string(clip["description"], "latin-1", strip_tags=True)
         desc = handleArgReplacement(desc, CONFIG_DICT.get("desc_regex"))
         scene: ScrapedScene
 
@@ -216,7 +210,7 @@ def populateScene(clip: C4S_Json, full_scene = True) -> ScrapedScene:
             "name": clip["studioTitle"].title(),
             "url": from_root(clip["studioLink"])
         }
-        # log.debug(f"{clip["gifPreviewUrl"]}, {clip["customPreview"]}")
+
         scene["image"] = clip["gifPreviewUrl"] if CONFIG_DICT.get("use_gif_for_thumb") and clip["gifPreviewUrl"] else clip["cdn_previewlg_link"]
     return scene
 
@@ -239,7 +233,7 @@ def get_duration_string(duration: int):
     return retVal
 
 def scene_from_name(name: str):
-    search_results = doSearch(name, CONFIG_DICT.get("studio_link"))
+    search_results = doSearch(name)
 
     retVal: list[ScrapedScene] = []
     for i, v in enumerate(search_results):
@@ -275,19 +269,16 @@ def scene_from_name(name: str):
         else:
             retVal.append(scene)
     return retVal
-    
-def scene_from_query_fragment(fragment: ScrapedScene):
-    scene = populateScene(getClipFromURL(fragment["urls"][0]))
-    scene["urls"] = fragment["urls"]
-    return scene
 
 def scene_from_fragment(fragment: ScrapedScene):
-    result: ScrapedScene = None
     for v in fragment["urls"]:
         if("clips4sale" in v):
-            if(not result):
-                result = populateScene(getClipFromURL(clean_url(v)))
-    return result
+            return populateScene(getClipFromURL(v))
+    
+def scene_from_query_fragment(fragment: ScrapedScene):
+    scene = scene_from_fragment(fragment)
+    scene["urls"] = fragment["urls"]
+    return scene
 
 scrape_type: TypeAlias = Literal["scene-by-url"] | Literal["scene-by-fragment"] | Literal["scene-by-name"] | Literal["scene-by-query-fragment"]
 def do_scrape(type: scrape_type, data, config: Scraper_Conf | None = None):
@@ -311,34 +302,6 @@ def do_scrape(type: scrape_type, data, config: Scraper_Conf | None = None):
 if __name__ == "__main__":
     op, args = scraper_args()
     result = None
-
-    # log.debug(args["extra"])
-    # log.debug(CONFIG_DICT)
-    log.debug(conf_from_extra(args["extra"]))
-    # log.debug(format_html("<body> 0 <p> 1 <p> 2 </p> 3 <p> 4 </p> 5 </p> 6 </body>"))
-
+    # log.debug(conf_from_extra(args["extra"]))
     result = do_scrape(op, args, conf_from_extra(args["extra"]))
-
-    # match op, args:
-    #     case "scene-by-url", {"url": url} if url:
-    #         result = scene_from_url(url)
-    #     case "scene-by-fragment", {"urls": urls} if len(urls):
-    #         result = scene_from_fragment(args)
-    #         # result = scene_from_url(url, argsToDict(extra))
-    #     case "scene-by-name", {"name": name} if name:
-    #         result = scene_from_name(name)
-    #     case "scene-by-query-fragment", {}:
-    #         # log.debug(args)
-    #         result = scene_from_query_fragment(args)
-    #     # case "scene-by-name", {"name": name, "extra": extra} if name:
-    #     #     log.debug(args)
-    #     #     studio = extra[0] if len(extra) > 0 else None
-    #     #     result = betterC4sSearch(query=name, studioUrl=studio)
-    #     case _:
-    #         log.error(
-    #             f"Not implemented: Operation: {op}, arguments: {json.dumps(args)}"
-    #         )
-    #         sys.exit(1)
-
-    # log.debug("result: %s" % result)
     print(json.dumps(result))

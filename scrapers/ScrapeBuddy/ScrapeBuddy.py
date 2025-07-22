@@ -9,8 +9,9 @@ from datetime import datetime
 from typing import TypedDict
 # from functools import reduce
 
-ensure_requirements("lxml", "regex")
+ensure_requirements("lxml", "regex", "fp:free-proxy")
 
+from fp.fp import FreeProxy
 from lxml import html as lhtml
 import regex as re
 
@@ -75,10 +76,11 @@ def format_element(element: lhtml.HtmlElement):
             if(tag == "q"):
                 element.text = f'"{element.text}"'
 
-            if(tag == "h1"):
-                element.text += "\n" + ("=" * len(element.text.strip()))
-            elif(tag == "h2"):
-                element.text += "\n" + ("-" * len(element.text.strip()))
+            # NOTE: Re-implement later, with a config option?
+            # if(tag == "h1"):
+            #     element.text += "\n" + ("=" * len(element.text.strip()))
+            # elif(tag == "h2"):
+            #     element.text += "\n" + ("-" * len(element.text.strip()))
             
             # Handle tags like <p> and <h#> that add 1 full line between them and their neighbours (with default styling)
             if(tag in DOUBLE_BREAK and string_has_text(element.text)):
@@ -99,4 +101,16 @@ def format_html(doc: str):
     doc = re.sub(r"<br>(?: *\n *)?", "\n", doc.text_content())
     doc = re.sub(r"(?<=\n|^) +| +(?=\n|$)", "", doc)
     return re.sub(r" {2,}", " ", doc)
-        
+
+
+def parse_date(date_string: str, format: str = "%m/%d/%y %I:%M %p") -> str:
+    try:
+        return datetime.strftime(datetime.strptime(date_string, format), "%Y-%m-%d")
+    except Exception as e:
+        log.error(e)
+        return date_string
+
+def get_proxies() -> dict:
+    proxy = FreeProxy(rand=True).get()
+    log.debug("proxy: %s" % proxy)
+    return { 'http': proxy } if proxy.startswith('http:') else { 'https': proxy }

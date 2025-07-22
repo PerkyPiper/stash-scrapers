@@ -55,5 +55,3 @@ class C4S_Json(TypedDict):
     size: int
     """ File size in MB! """
     studio: C4S_Studio
-    # urls: list[str] | None = None
-    # """ IMPORTANT: This fields is just here for clip merging! It doesn't exist in the c4s schema! """
