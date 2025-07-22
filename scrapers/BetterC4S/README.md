@@ -13,7 +13,7 @@ You can configure the scraping behaviour of BetterC4S by editing the provided fi
 
 You can also specify per-studio behaviour by creating a dependant scraper, like so:
 
-### YML
+### YAML
 ```
 # requires: BetterC4S
 name: "<Your scraper name>"
