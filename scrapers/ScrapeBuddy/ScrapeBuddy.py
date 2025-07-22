@@ -82,10 +82,10 @@ def format_element(element: lhtml.HtmlElement):
             # elif(tag == "h2"):
             #     element.text += "\n" + ("-" * len(element.text.strip()))
             
-            # Handle tags like <p> and <h#> that add 1 full line between them and their neighbours (with default styling)
+            # Handle tags like <p> and <h#> which should put 2 line breaks between them!
             if(tag in DOUBLE_BREAK and string_has_text(element.text)):
                 add_breaks(element, 2)
-            # Handle tags like <div> and <li> which 
+            # Handle tags like <div> and <li> which should add 1 line break
             elif(tag in SINGLE_BREAK and string_has_text(element.text)):
                 add_breaks(element, 1)
             elif(tag == "br"):
