@@ -1,0 +1,143 @@
+name: "Girls Gone Hypnotized"
+# sceneByURL:
+#   - action: scrapeXPath
+#     url:
+#       - https://girlsgonehypnotized.com/
+#     scraper: sceneScraper
+
+sceneByURL:
+  - action: script
+    url:
+      - https://girlsgonehypnotized.com/
+    script:
+      - python
+      - Scraper.py
+      - scene-by-url
+    
+sceneByFragment:
+  action: script
+  script:
+      - python
+      - Scraper.py
+      - scene-by-fragment
+
+# sceneByFragment:
+#   action: scrapeXPath
+#   scraper: sceneScraper
+#   queryURL: https://girlsgonehypnotized.com/{filename}.html
+#   queryURLReplace:
+#     filename:
+#       - regex: "GirlsGoneHypnotized"
+#         with: ""
+#       - regex: "(GGH)|(Ggh)"
+#         with: ""
+#       # WMV was on older videos, but those videos now download as MP4
+#       - regex: \.mp4|\.wmv|\.avi|\.flv|\.m4v
+#         with: ""
+#       # Only found -480 on one video, but that's enough
+#       - regex: -2160$|-720$|-480$
+#         with: ""
+#       # Old videos downloaded 'normal' size at like 360p, and '-big' at like 540p, but not anymore
+#       - regex: -big$
+#         with: ""
+#       - regex: /\(|\)|-|_| /
+#         with: ""
+#       - regex: "The"
+#         with: "the"
+#       - regex: "A"
+#         with: "a"
+#       - regex: "An"
+#         with: "an"
+#       - regex: "By"
+#         with: "by"
+#       - regex: "To"
+#         with: "to"
+#       - regex: "Be"
+#         with: "be"
+#       - regex: "And"
+#         with: "and"
+#       - regex: "In"
+#         with: "in"
+        
+
+xPathScrapers:
+  sceneScraper:
+    common:
+      # $desc: //td//div/text()[1]
+      $title: //td//span[contains(@style, "bold")]/text() | //td//b/text()
+      $c4s: //a[contains(@href, "clips4sale")][1]/@href
+    scene:
+      Title: $title
+      # Details: 
+      #   selector: //div[contains(@style, "justify;")]//text()
+      #   concat: " "
+      # Details: 
+      #   selector: //div/text()[1] | //li
+      #   concat: "\n- "
+      Details:
+        selector: //div[contains(@style, "justify;")]//text()
+        concat: "\n"
+        postProcess:
+          - javascript: |
+              try {
+                const [D, N] = value.split("Full Download Details:")
+                let [H] = N.split("Key highlights of video include:\n")[1].split("\nAvailable in:")
+                H = ["Key highlights of video include:", ...H.split("\n")].join("\n- ")
+                const RetVal = [D, H].join("\n")
+                console.log(RetVal)
+                return RetVal
+              } catch(e) {
+                console.error(e)
+                return ""
+              }
+          
+      # Code:
+      # Director:
+      URLs: 
+        selector: //img[contains(@src, "images/buynow.png")]/../@href
+        postProcess:
+          - javascript: |
+              if(value.startsWith("http")) {
+                return value
+              } else {
+                return `https://girlsgonehypnotized.com/${value.replace(/ |'|-/g, "")}.html`
+              }
+      Date:
+        selector: $c4s
+        subScraper:
+          selector: //div[contains(@class, 'border-b border-white/20 lg:border-0 pb-3 lg:pb-0 mb-3 lg:mb-0')]/span[contains(text(),'/')]/text()
+          postProcess: &ppParseDate
+            - replace:
+                - regex: \s.+
+                  with: ""
+            - parseDate: 1/2/06
+      # Image: 
+      #   URLs: 
+      #     selector: //img[not(@src="images/buynow.png")][1]/@src
+      #     postProcess:
+      #       - replace:
+      #         - regex: \images/\
+      #         with: "https://girlsgonehypnotized.com/images/"
+      Image:
+        selector: $c4s
+        subScraper:
+          selector: //figure[contains(@class, "mediabook-preview")]//img/@src
+      Studio:
+        Name: 
+          fixed: "Girls Gone Hypnotized"
+      # Tags:
+      #   Name:
+      #     selector: $c4s
+      #     subScraper:
+      #       selector: //span[contains(text(), 'Keywords')]/following-sibling::span/a/text() | //span[contains(text(), 'Category')]/following-sibling::span/a/text()
+      #       concat: ","
+      #       # postProcess:
+      #       #   - replace:
+      #       #       - regex: ',\s+'
+      #       #         with: ","
+      #       split: ","
+      # Performers:
+      #   Name:
+      # Groups:
+      #   Name:
+# Last Updated February XX, 2025
