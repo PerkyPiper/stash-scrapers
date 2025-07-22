@@ -1,19 +1,21 @@
 # Piper's Better Clips4Sale Scraper
-This is intended to be a much more capable version of the Clips4Sale scraper!
+The aim for this scraper is to provide a number of features that make the experience of scraping from clips4sale less of a chore!
 
-## Improvements:
-- Gets results faster by using REST JSON routes instead of scraping the DOM!
+## Features:
+- Uses REST API routes to access the clip JSON directly, rather than scraping the DOM!
 - Automatically removes banned search terms from queries
-- Automatically trims metadata from clip titles
-    - Merges results that have the same name (after trimming), so that the url for each version of a clip can be included in the resulting fragment!
+- Merges clips with multiple resolutions/formats in search results!
+  - All of the merged URLs are added to the resulting scene!
 - Allows for per-studio scraping behaviour through dependant scrapers (See below)
-- Includes clip duration in search result titles (can be disabled)
+- Includes clip duration in search result titles, allowing for much faster identification!
+- Most major features are toggleable in the config file!
 
 ## Customizing Behaviour
 You can configure the scraping behaviour of BetterC4S by editing the provided fields in the config.ini (if it doesn't exist, run the scraper once then check again)!
 
-You can also specify per-studio behaviour by creating a dependant scraper, like so:
+You can also specify per-studio behaviour, which allows you to use the studio's specific search page, rather than the main clips4sale one!
 
+Here's how you do it:
 ### YAML
 ```
 # requires: BetterC4S
@@ -24,7 +26,7 @@ name: "<Your scraper name>"
   script:
       - python
       - ./BetterC4S/BetterC4S.py                              # Path may need to be altered based on location
-      - studio_link::/studio/<STUDIO_ID>/<STUDIO_SLUG>/       # The studio store link, minus the https://clips4sale.com part
+      - studio_link::/studio/<STUDIO_ID>/<STUDIO_SLUG>/       # The studio store link, minus the https://clips4sale.com part USED FOR STUDIO SEARCH!
       - title_regex::<REGEX_TO_DELETE>                        # Replace this match with nothing!
       - title_regex::<ANOTHER_TO_DELETE>                      # You can put as many of these as you want, they will each run in order!
       - title_regex::["<REGEX_TO_REPLACE>", "<REPLACEMENT>"]  # Replace <REGEX_TO_REPLACE> with <REPLACEMENT>
@@ -46,3 +48,6 @@ result = do_scrape(
             "desc_regex": [[r"REGEX_TO_DELETE"]]
         })
 ```
+
+## Installing
+Refer to https://github.com/PerkyPiper/stash-scrapers/blob/main/README.md
