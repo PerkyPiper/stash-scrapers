@@ -7,6 +7,7 @@ This is intended to be a much more capable version of the Clips4Sale scraper!
 - Automatically trims metadata from clip titles
     - Merges results that have the same name (after trimming), so that the url for each version of a clip can be included in the resulting fragment!
 - Allows for per-studio scraping behaviour through dependant scrapers (See below)
+- Includes clip duration in search result titles (can be disabled)
 
 ## Customizing Behaviour
 You can configure the scraping behaviour of BetterC4S by editing the provided fields in the config.ini (if it doesn't exist, run the scraper once then check again)!
