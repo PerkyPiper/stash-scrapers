@@ -1,13 +1,14 @@
 # Piper's Better Clips4Sale Scraper
-This is intended to be a much more capable version of the Clips4Sale scraper!
+The aim for this scraper is to provide a number of features that make the experience of scraping from clips4sale less of a chore!
 
-## Improvements:
-- Gets results faster by using REST JSON routes instead of scraping the DOM!
+## Features:
+- Uses REST API routes to access the clip JSON directly, rather than scraping the DOM!
 - Automatically removes banned search terms from queries
-- Automatically trims metadata from clip titles
-    - Merges results that have the same name (after trimming), so that the url for each version of a clip can be included in the resulting fragment!
+- Merges clips with multiple resolutions/formats in search results!
+  - All of the merged URLs are added to the resulting scene!
 - Allows for per-studio scraping behaviour through dependant scrapers (See below)
-- Includes clip duration in search result titles (can be disabled)
+- Includes clip duration in search result titles, allowing for much faster identification!
+- Most major features are toggleable in the config file!
 
 ## Customizing Behaviour
 You can configure the scraping behaviour of BetterC4S by editing the provided fields in the config.ini (if it doesn't exist, run the scraper once then check again)!
