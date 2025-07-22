@@ -1,0 +1,44 @@
+# requires: BetterC4S
+name: "Cali Logan Customs"
+
+sceneByFragment:
+  action: script
+  script:
+      - python
+      - &BetterC4S ./BetterC4S/BetterC4S.py
+      - &LINK studio_link::/studio/76449/cali-logans-custom-fantasies/
+      # - &REPLACE_TITLE title_regex::(?i)- ?\d+x\d+|\(lower (?:quality|res) for.+\)|MOBILE VERSION|LOW RES
+      # - &REPLACE_DESC desc_regex::(?i)you might also enjoy[\s\S]+|[\s\S]*clip includes:[^\n]+|.+own custom (?:video|superheroine)[\s\S]+|\n[- ]{5,}[\s\S]*
+      - scene-by-fragment
+
+sceneByName:
+  action: script
+  # queryURL: file:///Q:/Site-Rips/websites/www.thevelvetdungeon.com/index.html
+  script:
+      - python
+      # - Scraper.py
+      - *BetterC4S
+      - *LINK
+      # - *REPLACE_TITLE
+      # - *REPLACE_DESC
+      - scene-by-name
+
+sceneByQueryFragment:
+  action: script
+  # queryURL: "{url}"
+  script:
+      - python
+      # - Scraper.py
+      - *BetterC4S
+      - *LINK
+      # - *REPLACE_TITLE
+      # - *REPLACE_DESC
+      - scene-by-query-fragment
+# groupByURL:
+# - action: script
+#   url:
+#     - https://hypnolust.com/
+#   script:
+#       - python
+#       - Scraper.py
+#       - movie-by-url
