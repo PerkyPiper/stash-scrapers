@@ -11,18 +11,6 @@ sceneByFragment:
       - &REPLACE_DESC desc_regex::(?i)you might also enjoy[\s\S]+|[\s\S]*clip includes:[^\n]+|.+own custom (?:video|superheroine)[\s\S]+|\n[- ]{5,}[\s\S]*
       - scene-by-fragment
 
-sceneByURL:
-  action: script
-  url:
-    - https://www.clips4sale.com/studio/36032/leggy-lovely--pin-up-ludella-hahn/
-  script:
-      - python
-      - *BetterC4S
-      - *LINK
-      - *REPLACE_TITLE
-      - *REPLACE_DESC
-      - scene-by-url
-
 sceneByName:
   action: script
   script:

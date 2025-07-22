@@ -10,18 +10,6 @@ sceneByFragment:
       - &REPLACE title_regex::DIAL-UP VERSION
       - scene-by-fragment
 
-sceneByURL:
-  action: script
-  url:
-    - https://www.clips4sale.com/studio/90595/the-stepford-girls/
-  script:
-      - python
-      # - Scraper.py
-      - *BetterC4S
-      - *LINK
-      - *REPLACE
-      - scene-by-url
-
 sceneByName:
   action: script
   script:
