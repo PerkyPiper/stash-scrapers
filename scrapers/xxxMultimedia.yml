@@ -5,7 +5,7 @@ sceneByFragment:
   action: script
   script:
       - python
-      - &BetterC4S ./BetterC4S/BetterC4S.py
+      - &BetterC4S ../BetterC4S/BetterC4S.py
       - &LINK studio_link::/studio/79949/xxx-multimedia/
       - &REPLACE_TITLE title_regex::(?i)mobile|low
       - &REPLACE_DESC desc_regex::(?i)this clip includes:[\s\S]+
