@@ -13,6 +13,8 @@ sceneByFragment:
 
 sceneByURL:
   action: script
+  url:
+    - https://www.clips4sale.com/studio/79949/xxx-multimedia/
   script:
       - python
       - *BetterC4S

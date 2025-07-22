@@ -12,6 +12,8 @@ sceneByFragment:
 
 sceneByURL:
   action: script
+  url:
+    - https://www.clips4sale.com/studio/90595/the-stepford-girls/
   script:
       - python
       # - Scraper.py

@@ -13,6 +13,8 @@ sceneByFragment:
 
 sceneByURL:
   action: script
+  url:
+    - https://www.clips4sale.com/studio/36032/leggy-lovely--pin-up-ludella-hahn/
   script:
       - python
       - *BetterC4S

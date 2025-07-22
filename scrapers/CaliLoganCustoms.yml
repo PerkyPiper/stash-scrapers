@@ -11,6 +11,8 @@ sceneByFragment:
 
 sceneByURL:
   action: script
+  url:
+    - https://www.clips4sale.com/studio/76449/cali-logans-custom-fantasies/
   script:
       - python
       - *BetterC4S
