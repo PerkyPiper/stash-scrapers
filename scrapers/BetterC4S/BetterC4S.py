@@ -23,11 +23,9 @@ from ScrapeBuddy.ScrapeBuddy import format_html, parse_date, get_proxies
 # NOTE: Surely there's a better way to do this?
 try:
     from Types import C4S_Json
-    from Util import clean_url
     from Config import set_conf, conf_from_extra, CONFIG_DICT, BANNED_WORDS, Scraper_Conf
 except ModuleNotFoundError:
     from BetterC4S.Types import C4S_Json
-    from BetterC4S.Util import clean_url
     from BetterC4S.Config import set_conf, conf_from_extra, CONFIG_DICT, BANNED_WORDS, Scraper_Conf
 
 SITE_ROOT = "https://www.clips4sale.com/"
@@ -215,7 +213,7 @@ def populateScene(clip: C4S_Json, full_scene = True) -> ScrapedScene:
     return scene
 
 def scene_from_url(url: str):
-    return populateScene(getClipFromURL(clean_url(url)))
+    return populateScene(getClipFromURL(url))
 
 def rank_result(query: list[str], result: SceneSearchResult):
     ranking = 0
