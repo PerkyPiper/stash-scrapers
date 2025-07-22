@@ -1,24 +1,6 @@
 # requires: BetterC4S
 name: "Stepford Girls"
 
-# galleryByURL:
-#   - action: script
-#     url:
-#       - https://www.entrancement.co.uk/
-#     script:
-#       - python
-#       - Scraper.py
-#       - gallery-by-url
-    
-# sceneByURL:
-#   - action: script
-#     url:
-#       - https://www.clips4sale.com/
-#     script:
-#       - python
-#       - Scraper.py
-#       - scene-by-url
-
 sceneByFragment:
   action: script
   script:
@@ -28,9 +10,18 @@ sceneByFragment:
       - &REPLACE title_regex::DIAL-UP VERSION
       - scene-by-fragment
 
+sceneByURL:
+  action: script
+  script:
+      - python
+      # - Scraper.py
+      - *BetterC4S
+      - *LINK
+      - *REPLACE
+      - scene-by-url
+
 sceneByName:
   action: script
-  # queryURL: file:///Q:/Site-Rips/websites/www.thevelvetdungeon.com/index.html
   script:
       - python
       # - Scraper.py
@@ -41,19 +32,9 @@ sceneByName:
 
 sceneByQueryFragment:
   action: script
-  # queryURL: "{url}"
   script:
       - python
-      # - Scraper.py
       - *BetterC4S
       - *LINK
       - *REPLACE
       - scene-by-query-fragment
-# groupByURL:
-# - action: script
-#   url:
-#     - https://hypnolust.com/
-#   script:
-#       - python
-#       - Scraper.py
-#       - movie-by-url

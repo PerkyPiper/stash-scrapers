@@ -11,35 +11,32 @@ sceneByFragment:
       - &REPLACE_DESC desc_regex::(?i)this clip includes:[\s\S]+
       - scene-by-fragment
 
-sceneByName:
+sceneByURL:
   action: script
-  # queryURL: file:///Q:/Site-Rips/websites/www.thevelvetdungeon.com/index.html
   script:
       - python
-      # - Scraper.py
       - *BetterC4S
       - *LINK
       - *REPLACE_TITLE
       - *REPLACE_DESC
-      - do_extra_sort::false
+      - scene-by-url
+
+sceneByName:
+  action: script
+  script:
+      - python
+      - *BetterC4S
+      - *LINK
+      - *REPLACE_TITLE
+      - *REPLACE_DESC
       - scene-by-name
 
 sceneByQueryFragment:
   action: script
-  # queryURL: "{url}"
   script:
       - python
-      # - Scraper.py
       - *BetterC4S
       - *LINK
       - *REPLACE_TITLE
       - *REPLACE_DESC
       - scene-by-query-fragment
-# groupByURL:
-# - action: script
-#   url:
-#     - https://hypnolust.com/
-#   script:
-#       - python
-#       - Scraper.py
-#       - movie-by-url
