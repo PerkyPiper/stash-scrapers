@@ -1,0 +1,32 @@
+# requires: BetterC4S
+name: "Ludella Hahn"
+
+sceneByFragment:
+  action: script
+  script:
+      - python
+      - &BetterC4S ./BetterC4S/BetterC4S.py
+      - &LINK studio_link::/studio/36032/leggy-lovely--pin-up-ludella-hahn/
+      - &REPLACE_TITLE title_regex::(?i)- ?\d+x\d+|\(lower (?:quality|res) for.+\)|MOBILE VERSION|LOW RES
+      - &REPLACE_DESC desc_regex::(?i)you might also enjoy[\s\S]+|[\s\S]*clip includes:[^\n]+|.+own custom (?:video|superheroine)[\s\S]+|\n[- ]{5,}[\s\S]*
+      - scene-by-fragment
+
+sceneByName:
+  action: script
+  script:
+      - python
+      - *BetterC4S
+      - *LINK
+      - *REPLACE_TITLE
+      - *REPLACE_DESC
+      - scene-by-name
+
+sceneByQueryFragment:
+  action: script
+  script:
+      - python
+      - *BetterC4S
+      - *LINK
+      - *REPLACE_TITLE
+      - *REPLACE_DESC
+      - scene-by-query-fragment
