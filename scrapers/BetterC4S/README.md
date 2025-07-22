@@ -48,3 +48,6 @@ result = do_scrape(
             "desc_regex": [[r"REGEX_TO_DELETE"]]
         })
 ```
+
+## Installing
+Refer to https://github.com/PerkyPiper/stash-scrapers/blob/main/README.md
