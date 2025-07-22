@@ -1,4 +1,4 @@
-# Clips4Sale has banned words, which cause searches to 404! These are the ones I've found:
+# Clips4Sale has banned words, which cause searches to 404! Feel free to add more if you find them, or submit a pull request to add them to the default!
 forced
 force
 forc
