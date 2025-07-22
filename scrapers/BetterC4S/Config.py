@@ -79,7 +79,7 @@ CONFIG_SCHEMA["user_agent"] = SchemaField[str](
     comment="# The user-agent string to use when scraping! You probably don't have to change this!", ini_only=False
 )
 CONFIG_SCHEMA["use_proxy"] = SchemaField[bool](
-    default=True, comment="# Sacrifice a little speed to make your scraping ways a little less obvious!"
+    default=False, comment="# Sacrifice a little speed to make your scraping ways a little less obvious (maybe)."
 )
 
 conf_string = ""
