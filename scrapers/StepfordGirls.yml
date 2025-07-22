@@ -7,7 +7,7 @@ sceneByFragment:
       - python
       - &BetterC4S ../BetterC4S/BetterC4S.py
       - &LINK studio_link::/studio/90595/the-stepford-girls/
-      - &REPLACE title_regex::DIAL-UP VERSION
+      - &REPLACE title_regex::DIAL-UP VERSION|LARGE
       - scene-by-fragment
 
 sceneByName:
