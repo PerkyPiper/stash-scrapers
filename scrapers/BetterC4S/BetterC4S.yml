@@ -1,0 +1,32 @@
+#requires: Scrapifier, py_common
+name: "BetterC4S"
+    
+sceneByURL:
+  - action: script
+    url:
+      - https://www.clips4sale.com/
+    script:
+      - python
+      - BetterC4S.py
+      - scene-by-url
+
+sceneByFragment:
+  action: script
+  script:
+      - python
+      - BetterC4S.py
+      - scene-by-fragment
+
+sceneByName:
+  action: script
+  script:
+      - python
+      - BetterC4S.py
+      - scene-by-name
+
+sceneByQueryFragment:
+  action: script
+  script:
+      - python
+      - BetterC4S.py
+      - scene-by-query-fragment
