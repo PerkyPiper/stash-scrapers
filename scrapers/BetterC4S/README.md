@@ -8,6 +8,7 @@ The aim for this scraper is to provide a number of features that make the experi
   - All of the merged URLs are added to the resulting scene!
 - Allows for per-studio scraping behaviour through dependant scrapers (See below)
 - Includes clip duration in search result titles, allowing for much faster identification!
+- Does additional sorting on search results to make them more relevant!
 - Most major features are toggleable in the config file!
 
 ## Customizing Behaviour
