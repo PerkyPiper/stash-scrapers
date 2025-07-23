@@ -1,4 +1,4 @@
-from Scrapifier import format_html
+from ScrapeBuddy import format_html
 
 with open("./test.html", "r", encoding="utf-8") as f:
     doc = f.read()
