@@ -6,7 +6,6 @@ sys.path.append("../")
 from py_common.deps import ensure_requirements
 from py_common import log
 from datetime import datetime
-from typing import TypedDict
 # from functools import reduce
 
 ensure_requirements("lxml", "regex", "fp:free-proxy")
