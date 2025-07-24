@@ -1,4 +1,4 @@
-# requires: Scrapifier, py_common
+# requires: ScrapeBuddy, py_common
 name: "BetterC4S"
     
 sceneByURL:
