@@ -123,7 +123,7 @@ def format_element(element: FormattingElement | HtmlElement, parent: FormattingE
                 if(element.post_breaks):
                     if(string_has_text(element.tail) or element.getnext() != None):
                         # No need to merge anything, as none of the following content has been processed yet!
-                        element.tail = "\n" * element.post_breaks + element.tail
+                        element.tail = "\n" * element.post_breaks + (element.tail if element.tail else "")
                     else:
                         # Defer post-breaks to the parent until there is content
                         parent.post_breaks = element.post_breaks
