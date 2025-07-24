@@ -1,3 +1,7 @@
+Open Test.html in a browser and compare with Test.txt after running Test.py to ensure everything is working as intended!
+
+
+
 Heading 1
 
 Heading 2
@@ -43,3 +47,20 @@ div>div>div
 div>div>div>p
 
 body
+
+Paragraph
+
+pre-br
+
+Paragraph between breaks
+
+
+post-br
+
+Paragraph
+
+Paragraph pre-br
+
+
+
+Paragraph post-br

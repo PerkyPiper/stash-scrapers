@@ -1,7 +1,9 @@
 from ScrapeBuddy import format_html
 
-with open("./test.html", "r", encoding="utf-8") as f:
-    doc = f.read()
+input = open("./Test.html", "r", encoding="utf-8").read()
 
-    with open("./test.txt", "w", encoding="utf-8") as y:
-        y.write(format_html(doc))
+def runTest():
+    format_html(input)
+
+with open("./Test.txt", "w", encoding="utf-8") as o:
+    o.write(format_html(input))
