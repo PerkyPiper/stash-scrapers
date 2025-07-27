@@ -1,7 +1,11 @@
-from ScrapeBuddy import format_html
+import sys
+sys.path.append("../")
+
+from Parsing import format_html
 
 input = open("./Test.html", "r", encoding="utf-8").read()
 
+# py -m timeit -s "from Test import runTest" "runTest()"
 def runTest():
     format_html(input)
 

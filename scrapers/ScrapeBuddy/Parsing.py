@@ -1,17 +1,16 @@
 import html
-import sys
+# import sys
 import re
 
-sys.path.append("../")
+# sys.path.append("../")
 
 from py_common.deps import ensure_requirements
 from py_common import log
 from datetime import datetime
-# from functools import reduce
 
-ensure_requirements("lxml", "fp:free-proxy")
+from ScrapeBuddy.Util import string_has_text
 
-from fp.fp import FreeProxy
+ensure_requirements("lxml")
 from lxml import html as lhtml
 from lxml.html import HtmlElement
 
@@ -22,11 +21,6 @@ def parse_date(date_string: str, format: str = "%m/%d/%y %I:%M %p") -> str:
         log.error(e)
         return date_string
 
-def get_proxies() -> dict:
-    proxy = FreeProxy(rand=True).get()
-    log.debug("proxy: %s" % proxy)
-    return { 'http': proxy } if proxy.startswith('http:') else { 'https': proxy }
-
 # These tags, and all of their content (including child elements) will be removed from the output!
 IGNORE_TAGS = {"video", "select", "audio", "img", "figure", "form", "map", "textarea", "pre", "input", "button"}
 # These tags have a 1 linewidth margin on the top and bottom! This is simulated with a double \n
@@ -36,10 +30,7 @@ SINGLE_BREAK = {"div", "tr", "dt", "dd", "li"}
 # These tags render indented! This is simulated with a "	" (TAB)
 INDENT_TAGS = {"dd", "li", "blockquote"}
 
-def string_has_text(x: str | None):
-    return x != None and x != "" and not x.isspace()
-
-def merge_breaks(x: str, count: int):
+def _merge_breaks(x: str, count: int):
     if(count):
         breaks = "\n" * count
         if(string_has_text(x)):
@@ -56,7 +47,7 @@ class FormattingElement(HtmlElement):
     post_breaks: int | None
     list_index: int | None
 
-def set_breaks(element: FormattingElement, count: int):
+def _set_breaks(element: FormattingElement, count: int):
     # Set our pre_breaks and post_breaks ONLY IF a child hasn't already set them to a value equal/higher
     if(count > element.pre_breaks):
         element.pre_breaks = count
@@ -108,14 +99,14 @@ def format_element(element: FormattingElement | HtmlElement, parent: FormattingE
 
                 # Add breaks if needed!
                 if(tag in DOUBLE_BREAK):
-                    set_breaks(element, 2)
+                    _set_breaks(element, 2)
                 elif(tag in SINGLE_BREAK):
-                    set_breaks(element, 1)
+                    _set_breaks(element, 1)
 
                 if(element.pre_breaks):
                     if(string_has_text(parent.text)):
                         # Add the pre-breaks, optionally replacing ones that already exist!
-                        parent.text = merge_breaks(parent.text, element.pre_breaks)
+                        parent.text = _merge_breaks(parent.text, element.pre_breaks)
                     else:
                         # Defer pre-breaks to the parent until there is content
                         parent.pre_breaks = element.pre_breaks
