@@ -1,0 +1,32 @@
+# requires: BetterC4S
+name: "The Velvet Dungeon"
+
+sceneByFragment:
+  action: script
+  script:
+      - python
+      - &BetterC4S ../BetterC4S/BetterC4S.py
+      - &LINK studio_link::/studio/70638/the-velvet-dungeon/
+      # - &REPLACE_TITLE title_regex::(?i)- ?\d+x\d+|\(lower (?:quality|res) for.+\)|MOBILE VERSION|LOW RES
+      - &REPLACE_DESC desc_regex::(?i)(?:for more information|for previews and|to see a (?:longer )?preview of)[\s\S]+
+      - scene-by-fragment
+
+sceneByName:
+  action: script
+  script:
+      - python
+      - *BetterC4S
+      - *LINK
+      # - *REPLACE_TITLE
+      - *REPLACE_DESC
+      - scene-by-name
+
+sceneByQueryFragment:
+  action: script
+  script:
+      - python
+      - *BetterC4S
+      - *LINK
+      # - *REPLACE_TITLE
+      - *REPLACE_DESC
+      - scene-by-query-fragment
