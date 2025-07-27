@@ -1,151 +1,111 @@
 import json
-import pathlib
 
-from typing import TypedDict, TypeAlias
-from py_common.config import get_config
+from typing import TypedDict, Callable, Any, TypeAlias
 from py_common import log
+from py_common.config import get_config
 
-BANNED_WORDS: set[str] = set()
-with open(f"{pathlib.Path(__file__).parent}/banned_words.txt", "r") as wordFile:
-    for word in wordFile:
-        if(not word.startswith("#")):
-            BANNED_WORDS.add(word.strip())
+ConfigParser: TypeAlias = Callable[[Any, Any | None, bool], bool]
+_configParsers: dict[str, ConfigParser] = {}
+_confString = ""
+def _addConfigField(name: str, default, comment: str, /, ini_only = True, multi_value = False, is_list = False, custom_parser: ConfigParser | None = None):
+    global _confString
+    _confString += f"""
+                        {comment if comment.startswith("#") else "# " + comment}
+                        {name} = {json.dumps(default)}
+                    """
+    
+    # if(custom_parser):
+    #     _parsers[name] = custom_parser
+    # else:
+    def fieldParser(val, existing: Any | None, from_ini: bool):
+        nonlocal name, ini_only, multi_value, is_list, custom_parser
 
-class SchemaField[T](TypedDict):
-    default: T = None
-    comment: str
-    multi = False
-    ini_only = True
-    is_list = False
+        if(ini_only and not from_ini):
+            log.warning(f"Setting config field '{name}' is not allowed outside of the config.ini!")
+            return existing
+        else:
+            if(isinstance(val, str)):
+                try:
+                    val = json.loads(val)
+                except json.JSONDecodeError:
+                    pass
 
-Replacer: TypeAlias = list[str, str]
+            if(custom_parser):
+                val = custom_parser(val, existing, from_ini)
 
-class Scraper_Extra(TypedDict):
-    title_regex: list[Replacer]
-    desc_regex: list[Replacer]
-    use_gif_for_thumb: bool
+            if(is_list and not isinstance(val, list)):
+                val = [val]
+
+            if(multi_value and not from_ini):
+                val = [val]
+
+            if(existing == None):
+                return val
+            elif(multi_value):
+                return existing + val
+    _configParsers[name] = fieldParser
+
+class ScraperConfigParams(TypedDict):
+    title_regex: list[str]
+    desc_regex: list[str]
+    studio_link: str
+
+class ScraperConfig(ScraperConfigParams):
+    use_proxy: bool
+    multi_page: bool
+    include_duration: bool
+    do_extra_sort: bool
+    join_results: bool
+    remove_banned_words: bool
+    use_gif_thumbs: bool
     user_agent: str
 
-class Scraper_Conf(Scraper_Extra):
-    # banned_words: list[str]
-    skip_default_title_replacer: bool
-    join_search_results: bool
-    do_extra_sort: bool
-    include_duration: bool
-    multi_page: bool
-    use_proxy: bool
-    
-CONFIG_SCHEMA: dict[str, SchemaField] = {}
-CONFIG_SCHEMA["skip_default_title_replacer"] = SchemaField[bool](
-    default=False,
-    comment="""# The default title replacer does the following (in order):
-               # - Strips HTML tags
-               # - Removes references to the clip's file extension or resolution
-               # - Removes empty bracket pairs ([], (), {}, <>) that may be leftover from the previous step
-               # - Replaces sequences of multiple spaces with just one
-               # Generally speaking, you shouldn't need to disable it! Custom title_replacers are run immediately after the default!"""
-)
-CONFIG_SCHEMA["join_search_results"] = SchemaField[bool](
-    default=True,
-    comment="# After running title replacements, clips with the same name will be merged into one to reduce search results! All merged urls are included in the final result!"
-)
-CONFIG_SCHEMA["do_extra_sort"] = SchemaField[bool](
-    default=True, ini_only=False,
-    comment="# Attempts to help make the order of search results more relevant!"
-)
-CONFIG_SCHEMA["title_regex"] = SchemaField[Replacer](
-    default=[], ini_only=False, is_list=True, multi=True,
-    comment="""# This is a list of regex replacements for titles, format is [["REGEX_HERE", "OPTIONAL_REPLACEMENT_HERE"]]
-               # NOTE: Escaped sequences (\\d, \\1, etc.) will require a double backslash (\\\\d, \\\\1, etc.)"""
-)
-CONFIG_SCHEMA["desc_regex"] = SchemaField[Replacer](
-    default=[], ini_only=False, is_list=True, multi=True,
-    comment="# Same as above, but for the video description!"
-)
-CONFIG_SCHEMA["include_duration"] = SchemaField[bool](
-    default=True, comment="# Includes the clip duration in the search results' titles!"
-)
-CONFIG_SCHEMA["use_gif_for_thumb"] = SchemaField[bool](
-    default=False, comment="""# If the clip has a custom gif preview, use it as the cover image instead of the default static preview!
-                              # NOTE: having a lot of these can negatively impact stash browsing performance!""", ini_only=False
-)
-CONFIG_SCHEMA["multi_page"] = SchemaField[bool](
-    default=False, comment="""# By default, you will only ever get one page of results back, this is usually, but not always enough!
-                              # If you enable this, clicking the search button multiple times will load 1 more page worth of results each time.
-                              # Pagination is reset after 10 minutes when the cache expires! Extra sorting is highly recommended!"""
-)
-CONFIG_SCHEMA["user_agent"] = SchemaField[str](
-    default="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
-    comment="# The user-agent string to use when scraping! You probably don't have to change this!", ini_only=False
-)
-CONFIG_SCHEMA["use_proxy"] = SchemaField[bool](
-    default=False, comment="# Sacrifice a little speed to make your scraping ways a little less obvious (maybe)."
-)
+_addConfigField("title_regex", [], """# A JSON encoded list of regex replacements to apply to clip titles!
+                # This should be used to remove metadata from titles so identical clips can be merged!
+                # Example: [["Replace me", "With me"], ["Delete me!"]]
+                # Use a double \\ instead of just one for escape sequences! Example: ["\\\\d+", "This used to be a number!"]""",  ini_only=False, is_list=True, multi_value=True)
+_addConfigField("desc_regex", [], "# Same as title_regex, but for the description! This DOES NOT affect clip merging!", ini_only=False, is_list=True, multi_value=True)
+# _addConfigField("studio_link", None, "# Technically you can use this, but it's meant for dependant scrapers, not the config file!", ini_only=False)
 
-conf_string = ""
-for v in CONFIG_SCHEMA:
-    conf_string +=f"""
-                        {CONFIG_SCHEMA[v]["comment"]}
-                        {v} = {json.dumps(CONFIG_SCHEMA[v]['default'])}
-                   """
+_addConfigField("use_proxy", True, "# Sacrifice a bit of speed in order to hide your scraping ways!")
+# _addConfigField("multi_page", False, "# Scrapes an additional page each time you search with the same prompt (until the cache expires in 10 minutes)")
+_addConfigField("include_duration", True, "# When true, the clip duration will be included in search result titles (not the final scene)!")
+_addConfigField("do_extra_sort", True, "# Sorts the search results again after getting them! *May* help make results more relevant!")
+_addConfigField("join_results", True, "# Joins search results with matching names (after replacements)! All URLs are included in final scene!")
+_addConfigField("remove_banned_words", True, "# Removes banned words (see banned_words.txt) from search queries automatically! If you turn this off, queries with banned words will just error out!")
+_addConfigField("use_gif_thumbs", False, """# If true, gif previews will be used as the thumbnail instead of still images!
+                                            # WARNING: This will slow down the scraper! Stash browsing performance also takes a hit with gif thumbnails!""")
+_addConfigField("user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+                "# This is the user-agent string to use while scraping! You probably don't need to change this!")
 
-CONF = get_config(conf_string)
-CONFIG_DICT: Scraper_Conf = CONF.config_dict
+BC4S_CONFIG = get_config(_confString)
+CONFIG_DICT: ScraperConfig = BC4S_CONFIG.config_dict
 
-for k,v in CONFIG_DICT.items():
-    if(isinstance(v, str)):
-        try:
-            CONFIG_DICT[k] = json.loads(v)
-        except json.JSONDecodeError:
-            CONFIG_DICT[k] = v
-        
+# for k,v in CONFIG_DICT.items():
+#     if(k in _configParsers):
+#         CONFIG_DICT[k] = _configParsers[k](v, None, True)
 
-def parse_extra_value(key: str, val):
-    if(not CONFIG_SCHEMA[key].get("ini_only")):
-        if(isinstance(val, str)):
-            try:
-                val = json.loads(val)
-            except json.JSONDecodeError:
-                pass
-                # log.debug(f"{val} not converting from json, reason: {e}")
-
-            if(CONFIG_SCHEMA[key].get("is_list") and not isinstance(val, list)):
-                val = [val]
-
-            if(CONFIG_SCHEMA[key].get("multi")):
-                val = [val]
-        return val
-    else:
-        log.warning(f"The {key} field can only be used in the config.ini file!")
-
-def set_conf(conf: Scraper_Extra):
-    for i,v in conf.items():
-        if i in CONFIG_SCHEMA:
-            multi = CONFIG_SCHEMA[i].get("multi")
-
-            if(i in CONFIG_DICT and CONFIG_DICT[i] != None):
-                if(multi):
-                    CONFIG_DICT[i] += v
-                else:
-                    CONFIG_DICT[i] = v
-                    # log.warning(f"Attempted to set {i}, but it's already been set and doesn't allow multiple values!")
-            else:
-                CONFIG_DICT[i] = [v] if multi else v
+def _applyConf(params: ScraperConfigParams, from_ini):
+    for k,v in params.items():
+        if(k in _configParsers):
+            CONFIG_DICT[k] = _configParsers[k](v, None if from_ini else CONFIG_DICT.get(k), from_ini)
         else:
-            CONFIG_DICT[i] = v
-    return CONFIG_DICT
-        
+            CONFIG_DICT[k] = v
+_applyConf(CONFIG_DICT, True)
 
-def conf_from_extra(extra: list[str]):
-    retVal: Scraper_Extra = {}
+def _extraToDict(extra: list[str]):
+    retVal = {}
     for v in extra:
         v = v.split("::")
+        key = v[0]
         val = True
 
         if(len(v) > 1):
             val = v[1]
-            if(v[0] in CONFIG_SCHEMA):
-                val = parse_extra_value(v[0], val)
-
-        retVal[v[0]] = val
+        retVal[key] = val
     return retVal
+
+def apply_params(params: ScraperConfigParams | list[str]):
+    if(isinstance(params, list)):
+        params = _extraToDict(params)
+    _applyConf(params, False)

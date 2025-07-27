@@ -17,7 +17,7 @@ class C4S_Studio(TypedDict):
     avatar: str
     link: str
 
-class C4S_Json(TypedDict):
+class C4S_Clip(TypedDict):
     """ NOTE: These types are far from exhaustive!!! """
     clipId: str
     title: str
@@ -52,6 +52,8 @@ class C4S_Json(TypedDict):
     """
     gifPreviewUrl: str
     resolution: str
+    screen_size: str
     size: int
     """ File size in MB! """
     studio: C4S_Studio
+    previewLink: str
