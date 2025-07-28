@@ -57,3 +57,4 @@ class C4S_Clip(TypedDict):
     """ File size in MB! """
     studio: C4S_Studio
     previewLink: str
+    isAudio: bool

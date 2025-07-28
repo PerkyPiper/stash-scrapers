@@ -36,10 +36,37 @@ def _paramReplacement(x: str, replacers: list[list[str]] | None = None):
     return x
 
 def cleanTitle(clip: C4S_Clip):
-    res = f"{clip["resolution"]}?" if clip["resolution"] and clip["resolution"].endswith("p") else clip["resolution"]
-    # Remove things like: <em></em>, 1920x1080, 1080p?, MP4, HD/SD, 60 ?fps
-    title = re.sub(f"<[^>]+>|{clip["screen_size"]}|{res}|\\b{clip["format"]}\\b|\\b[hs]d\\b|\\d+ ?fps", "", clip["title"], flags=re.IGNORECASE)
-    # Do configured replacements
+    # format = clip["format"] if clip["format"] != "other" else r"(?:flv|mkv|m4v)"
+    # format = clip["format"]
+    # res = clip["resolution"]
+
+    # Match html tags, HD/SD, and framerate
+    pattern = r"<[^>]+>|\b[hs]d\b|\d+ ?fps"
+
+    if(clip["resolution"]):
+        # Match screen size (1920x1080) and resolution (1080p, 4k)
+        pattern += f"|{clip["screen_size"]}|{clip["resolution"]}"
+        if(pattern.endswith("p")):
+            # If the resolution ends in a p then that p is optional!
+            pattern += "?"
+
+        # In search results, clip format string can only be one of the following:
+        #   mp4, wmv, mov, mpg, avi, <POSSIBLY MORE>, other
+        # On the clip page, the actual correct format will always be available for matching!
+        format = clip["format"]
+        if(format == "other"):
+            # We don't ever want to strip the word "other", so match some other commonish formats instead!
+            format = r"(?:m(?:[4k]v|2ts?)|f[l4]v|3g[2p]|rmvb)"
+
+        pattern += f"|\\b{format}\\b"
+    else:
+        # THIS IS AN AUDIO FILE!!!
+        # TODO: Implement me?
+        pass
+
+    # Yeet all the matched metadata!
+    title = re.sub(pattern, "", clip["title"], re.IGNORECASE)
+    # Do config replacements
     title = _paramReplacement(title, CONFIG_DICT.get("title_regex"))
     # Remove empty bracket pairs, strip seperator characters
     title = re.sub(r"[\[\(\{\<]\s*[\]\)\}\>]", "", title).strip(" -|")
