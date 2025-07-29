@@ -10,6 +10,7 @@ The aim for this scraper is to provide a number of features that make the experi
 - Includes clip duration in search result titles, allowing for much faster identification!
 - Does additional sorting on search results to make them more relevant!
 - Most major features are toggleable in the config file!
+- Supports using free proxies to scrape, protecting you from rate limits and IP blocking!
 
 ## Customizing Behaviour
 You can configure the scraping behaviour of BetterC4S by editing the provided fields in the config.ini (if it doesn't exist, run the scraper once then check again)!
