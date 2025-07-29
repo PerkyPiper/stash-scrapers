@@ -25,7 +25,6 @@ def cleanQuery(query: str):
     query = query.lower()
     if(CONFIG_DICT.get("remove_banned_words")):
         query = re.sub(r"\w+", _removeCensored, query)
-    # query = urllib.parse.quote(query)
     query = re.sub(r" {2,}", "", query)
     return query.strip()
 
@@ -36,10 +35,6 @@ def _paramReplacement(x: str, replacers: list[list[str]] | None = None):
     return x
 
 def cleanTitle(clip: C4S_Clip):
-    # format = clip["format"] if clip["format"] != "other" else r"(?:flv|mkv|m4v)"
-    # format = clip["format"]
-    # res = clip["resolution"]
-
     # Match html tags, HD/SD, and framerate
     pattern = r"<[^>]+>|\b[hs]d\b|\d+ ?fps"
 
@@ -65,7 +60,7 @@ def cleanTitle(clip: C4S_Clip):
         pass
 
     # Yeet all the matched metadata!
-    title = re.sub(pattern, "", clip["title"], re.IGNORECASE)
+    title = re.sub(pattern, "", clip["title"], flags=re.IGNORECASE)
     # Do config replacements
     title = _paramReplacement(title, CONFIG_DICT.get("title_regex"))
     # Remove empty bracket pairs, strip seperator characters
