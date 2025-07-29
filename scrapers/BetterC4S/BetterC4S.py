@@ -33,8 +33,8 @@ from Strings import cleanQuery, cleanDesc, cleanTitle, getDurationString
 # _SESSION.headers.update({"user-agent": CONFIG_DICT.get("user_agent")})
 
 if(CONFIG_DICT.get("use_proxy")):
-    from ScrapeBuddy.Proxy import get_proxy
-    from ScrapeBuddy.Image import img_data_url
+    from ScrapeBuddy.Proxy import get_proxy, get_data_url
+    # from ScrapeBuddy.Image import img_data_url
     # _SESSION.proxies = get_proxy()
 
 _session: requests.Session | None = None
@@ -86,7 +86,7 @@ def _clipFromURL(url: str) -> C4S_Clip:
 _picThreads = []
 def _populateScene(clip: C4S_Clip, from_search: bool = False):
     scene: ScrapedScene = {
-        "title": clip.get("title_clean", cleanTitle(clip)),
+        "title": clip["title_clean"] if "title_clean" in clip else cleanTitle(clip),
         "date": parse_date(clip["dateDisplay"]),
         "image": clip["previewLink"],
         "urls": [join_url(SITE_ROOT, clip["link"])],
@@ -112,7 +112,7 @@ def _populateScene(clip: C4S_Clip, from_search: bool = False):
     if(CONFIG_DICT.get("use_proxy")):
         @useThread(_picThreads)
         def fetchImage(url: str):
-            scene["image"] = img_data_url(_getSession().get(url))
+            scene["image"] = get_data_url(url, _getSession())
         fetchImage(scene["image"])
         # scene["image"] = cache_to_disk(CACHE_DURATION)(fetchImage)(scene["image"])
         # Threads.useThread(_picThreads, fetchImage)(scene["image"])
@@ -134,7 +134,9 @@ def _sceneFromName(query: str):
             n = i + 1
             while n < len(results):
                 o = results[n]
-                title = o.setdefault("title_clean", cleanTitle(o))
+                if(not "title_clean" in o):
+                    o["title_clean"] = cleanTitle(o)
+                title = o["title_clean"]
 
                 if(scene["title"].lower() == title.lower()):
                     scene["urls"].append(join_url(SITE_ROOT, o["link"]))
